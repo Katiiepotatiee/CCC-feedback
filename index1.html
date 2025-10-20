@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Contact Centre Recognition – 🐝</title>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <style>
+    /* === Page styling === */
+    body {
+      background-color: #ffdc44; /* bee network yellow */
+      color: #000;              /* black text */
+      font-family: system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;      /* centers horizontally */
+      justify-content: flex-start;  /* moves content to the top of the page */
+     min-height: 100vh;
+     margin: 0;
+     padding-top: 60px;       /* adds space above the title */
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    h1 {
+     text-align: center;
+    margin-bottom: 40px; /* add a little more space */
+    }
+
+    /* === Slider container === */
+    .slider-wrapper {
+  width: 100%;
+  max-width: 900px;
+  padding: 20px;
+  background-color: #fff;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  border-radius: 16px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: stretch; /* allows cards to stretch vertically */
+}
+
+
+
+    /* === Horizontal slider === */
+   .slider {
+  display: flex;
+  overflow: hidden;
+  scroll-behavior: smooth;
+  gap: 0px;
+  width: 100%;
+  align-items: stretch; /* ensures cards fill height */
+}
+
+    .slider::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* === Individual cards === */
+   
+.card {
+  box-sizing: border-box; /* Ensures padding doesn't break width */
+  min-width: 100%; /* ensures only one card fits at a time */
+  max-width: 100%;
+  height: auto; /* allows height to adjust based on content */
+  background-color: #ffffff;
+  border-radius: 1rem;
+  padding: 1rem;
+  flex-shrink: 0;
+  transition: transform 60s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+}
+
+    .card:hover {
+      transform: scale(1.05);
+    }
+    .card p {
+      text-align: center;
+      margin: 0.25rem 0;
+    }
+
+    /* === Navigation buttons === */
+   .nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: #ffdc44;
+  color: #ffdc44;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  opacity: 0.8;
+  z-index: 10; /* ensures buttons sit above other elements */
+}
+
+/* Move buttons outside the slider */
+#prev {
+  left: -50px; /* adjust as needed */
+}
+
+#next {
+  right: -50px; /* adjust as needed */
+}
+  </style>
+</head>
+<body>
+
+  <h1>CCC Feedback</h1>
+
+  <div class="slider-wrapper">
+    <div id="slider" class="slider"></div>
+    <button id="prev" class="nav-btn">◀</button>
+    <button id="next" class="nav-btn">▶</button>
+    <style>
+.slider-container {
+  width: 100%;
+  padding: 0 20px; /* optional: adds spacing on smaller screens */
+  box-sizing: border-box;
+  
+}
+    @media (max-width: 768px) {
+  .slider-wrapper {
+    width: 100%;
+    padding: 10px;
+  }
+
+  .card {
+    font-size: 0.9rem;
+    padding: 0.75rem;
+  }
+
+  .nav-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .card {
+    font-size: 0.8rem;
+    padding: 0.5rem;
+  }
+
+  .nav-btn {
+    display: none; /* hide buttons on very small screens if needed */
+  }
+}
+</style>
+  </div>
+
+  <script>
+    // 🔗 Paste your published Google Sheet CSV link here
+    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ_Je-mfaxTxhFYthqEKPANH33UOKkxCuN7LPFZa0_tNa7jo3R7YTpmtkbKNGN-Muo6o4dMNlVJtXGG/pub?output=csv";
+
+    const slider = document.getElementById('slider');
+
+    async function loadResponses() {
+      const res = await fetch(csvUrl);
+      const text = await res.text();
+      const parsed = Papa.parse(text, { header: true }).data;
+
+      const last10 = parsed.slice(-10).reverse();
+      renderCards(last10);
+    }
+
+    function renderCards(data) {
+      slider.innerHTML = "";
+      data.forEach(row => {
+       const date = row["Timestamp"] || "Unknown date";
+       const forWhom = row["For"] || "Unknown";
+       const feedback = row["Column 2"] || "No feedback";
+       const from = row["From"] || "Anonymous";
+
+        const card = document.createElement("div");
+        card.className = "card";
+      card.innerHTML = `
+     <p class="text-sm">For: ${forWhom}</p>
+     <p class="text-lg mb-2"> ${feedback}</p>
+     <p class="text-sm">From: ${from}</p>
+      
+`;
+        slider.appendChild(card);
+      });
+    }
+
+   document.getElementById('next').onclick = () => slider.scrollBy({ left: slider.offsetWidth, behavior: 'smooth' });
+   document.getElementById('prev').onclick = () => slider.scrollBy({ left: -slider.offsetWidth, behavior: 'smooth' });
+   function smoothScroll(element, distance, duration) {
+  const start = element.scrollLeft;
+  const startTime = performance.now();
+
+  function animateScroll(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    element.scrollLeft = start + distance * progress;
+
+    if (progress < 1) {
+      requestAnimationFrame(animateScroll);
+    }
+  }
+
+  requestAnimationFrame(animateScroll);
+}
+
+function scrollOrLoop() {
+  const maxScrollLeft = slider.scrollWidth - slider.clientWidth;
+  const currentScroll = slider.scrollLeft;
+
+  if (currentScroll >= maxScrollLeft) {
+    // Loop back to start
+    smoothScroll(slider, -currentScroll, 2000);
+  } else {
+    // Scroll forward one card
+    smoothScroll(slider, slider.offsetWidth, 2000);
+  }
+}
+
+// Scroll every 60 seconds
+setInterval(scrollOrLoop, 60000);
+``
+
+
+    loadResponses();
+    setInterval(loadResponses, 60000);
+  </script>
+</body>
+</html>
